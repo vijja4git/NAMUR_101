@@ -11,6 +11,7 @@
 __sfr __at(0x80) P0;
 __sfr __at(0x90) P1;
 __sfr __at(0xA0) P2;
+__sfr __at(0xB8) P3;
 
 /* Clock / power */
 __sfr __at(0x8E) CLKCON;
@@ -24,6 +25,8 @@ __sfr __at(0xB3) P1M1;
 __sfr __at(0xB4) P1M2;
 __sfr __at(0xB5) P2M1;
 __sfr __at(0xB6) P2M2;
+__sfr __at(0xB9) P3M1;
+__sfr __at(0xBA) P3M2;
 
 /* ADC */
 __sfr __at(0xE8) ADCCON0;

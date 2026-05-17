@@ -1,15 +1,14 @@
 /**
  * @file check_namur_thresholds.c
- * @brief Phase 1.4 compile-time verification of recalibrated namur_thresholds.h (host gcc).
+ * @brief Compile-time verification of field-calibrated namur_thresholds.h.
  */
 #include "namur_thresholds.h"
 
 enum {
-    /* New 200-ohm expected counts: (uA * 200 * 4095) / (5000 * 1000) */
-    expect_lead_break   = 24U,   // 150 uA
-    expect_latch_on     = 245U,  // 1500 uA
-    expect_latch_off    = 409U,  // 2500 uA
-    expect_short        = 982U   // 6000 uA
+    expect_lead_break   = 24U,   /* 150 uA */
+    expect_latch_on     = 196U,  /* 1200 uA — target detected */
+    expect_latch_off    = 458U,  /* 2800 uA — sensor idle band */
+    expect_short        = 1146U  /* 7000 uA — short circuit */
 };
 
 typedef char assert_lead_break[
@@ -21,8 +20,6 @@ typedef char assert_latch_on[
 typedef char assert_short[
     (NAMUR_ADC_SHORT_CIRCUIT == expect_short) ? 1 : -1];
 
-/* Inverted loop check: Current drops when target is present,
-   meaning NAMUR_ADC_LATCH_ON (1500uA) is a SMALLER count than NAMUR_ADC_LATCH_OFF (2500uA) */
 typedef char assert_band_order[
     (NAMUR_ADC_LATCH_ON < NAMUR_ADC_LATCH_OFF) ? 1 : -1];
 

@@ -2,8 +2,8 @@
  * @file test_namur_logic.c
  * @brief Host unit tests for namur_logic (GCC).
  *
- * Simulated ADC counts use 200-ohm / inverted-loop windows from namur_thresholds.h:
- *   lead < 24 | target ON < 245 | hold 245..409 | idle OFF > 409 | short > 982
+ * Simulated ADC counts (200 ohm, field AT-pin windows):
+ *   lead < 24 | target ON < 196 | hold 196..458 | idle ~550 | short > 1146
  */
 
 #include <stdio.h>
@@ -14,12 +14,12 @@
 #include "bsp_config.h"
 #include "namur_config.h"
 
-/* Mock loop ADC levels (200-ohm calibrated) */
-#define ADC_LEAD_BREAK      10U   /* < 24  */
-#define ADC_TARGET_PRESENT  200U  /* < 245 (latch ON) */
-#define ADC_HYST_MID        320U  /* 245 .. 409 hold band */
-#define ADC_IDLE            500U  /* > 409 (latch OFF) */
-#define ADC_SHORT           1100U /* > 982 */
+/* Mock loop ADC levels — match namur_thresholds.h field calibration */
+#define ADC_LEAD_BREAK      10U   /* 0 V / open */
+#define ADC_TARGET_PRESENT  120U  /* ~0.3–1 mA, latch ON */
+#define ADC_HYST_MID        300U  /* hold band */
+#define ADC_IDLE            550U  /* ~3.36 mA @ 0.67 V */
+#define ADC_SHORT           1200U /* ~8 mA short */
 
 static int g_failures;
 
