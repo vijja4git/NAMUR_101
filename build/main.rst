@@ -1,0 +1,259 @@
+                                      1 ;--------------------------------------------------------
+                                      2 ; File Created by SDCC : free open source ISO C Compiler
+                                      3 ; Version 4.5.0 #15242 (Mac OS X ppc)
+                                      4 ;--------------------------------------------------------
+                                      5 	.module main
+                                      6 	
+                                      7 	.optsdcc -mmcs51 --model-small
+                                      8 ;--------------------------------------------------------
+                                      9 ; Public variables in this module
+                                     10 ;--------------------------------------------------------
+                                     11 	.globl _main
+                                     12 	.globl _namur_logic_update
+                                     13 	.globl _namur_logic_init
+                                     14 	.globl _bsp_clear_wdt
+                                     15 	.globl _bsp_led_ch2_fault
+                                     16 	.globl _bsp_led_ch1_fault
+                                     17 	.globl _bsp_led_ch2_sense
+                                     18 	.globl _bsp_led_ch1_sense
+                                     19 	.globl _bsp_adc_read_channel
+                                     20 	.globl _bsp_read_dip
+                                     21 	.globl _bsp_delay_ms
+                                     22 	.globl _bsp_init
+                                     23 ;--------------------------------------------------------
+                                     24 ; special function registers
+                                     25 ;--------------------------------------------------------
+                                     26 	.area RSEG    (ABS,DATA)
+      000000                         27 	.org 0x0000
+                                     28 ;--------------------------------------------------------
+                                     29 ; special function bits
+                                     30 ;--------------------------------------------------------
+                                     31 	.area RSEG    (ABS,DATA)
+      000000                         32 	.org 0x0000
+                                     33 ;--------------------------------------------------------
+                                     34 ; overlayable register banks
+                                     35 ;--------------------------------------------------------
+                                     36 	.area REG_BANK_0	(REL,OVR,DATA)
+      000000                         37 	.ds 8
+                                     38 ;--------------------------------------------------------
+                                     39 ; internal ram data
+                                     40 ;--------------------------------------------------------
+                                     41 	.area DSEG    (DATA)
+      000021                         42 _g_logic:
+      000021                         43 	.ds 25
+                                     44 ;--------------------------------------------------------
+                                     45 ; overlayable items in internal ram
+                                     46 ;--------------------------------------------------------
+                                     47 ;--------------------------------------------------------
+                                     48 ; Stack segment in internal ram
+                                     49 ;--------------------------------------------------------
+                                     50 	.area SSEG
+      00003A                         51 __start__stack:
+      00003A                         52 	.ds	1
+                                     53 
+                                     54 ;--------------------------------------------------------
+                                     55 ; indirectly addressable internal ram data
+                                     56 ;--------------------------------------------------------
+                                     57 	.area ISEG    (DATA)
+                                     58 ;--------------------------------------------------------
+                                     59 ; absolute internal ram data
+                                     60 ;--------------------------------------------------------
+                                     61 	.area IABS    (ABS,DATA)
+                                     62 	.area IABS    (ABS,DATA)
+                                     63 ;--------------------------------------------------------
+                                     64 ; bit data
+                                     65 ;--------------------------------------------------------
+                                     66 	.area BSEG    (BIT)
+                                     67 ;--------------------------------------------------------
+                                     68 ; paged external ram data
+                                     69 ;--------------------------------------------------------
+                                     70 	.area PSEG    (PAG,XDATA)
+                                     71 ;--------------------------------------------------------
+                                     72 ; uninitialized external ram data
+                                     73 ;--------------------------------------------------------
+                                     74 	.area XSEG    (XDATA)
+                                     75 ;--------------------------------------------------------
+                                     76 ; absolute external ram data
+                                     77 ;--------------------------------------------------------
+                                     78 	.area XABS    (ABS,XDATA)
+                                     79 ;--------------------------------------------------------
+                                     80 ; initialized external ram data
+                                     81 ;--------------------------------------------------------
+                                     82 	.area XISEG   (XDATA)
+                                     83 	.area HOME    (CODE)
+                                     84 	.area GSINIT0 (CODE)
+                                     85 	.area GSINIT1 (CODE)
+                                     86 	.area GSINIT2 (CODE)
+                                     87 	.area GSINIT3 (CODE)
+                                     88 	.area GSINIT4 (CODE)
+                                     89 	.area GSINIT5 (CODE)
+                                     90 	.area GSINIT  (CODE)
+                                     91 	.area GSFINAL (CODE)
+                                     92 	.area CSEG    (CODE)
+                                     93 ;--------------------------------------------------------
+                                     94 ; interrupt vector
+                                     95 ;--------------------------------------------------------
+                                     96 	.area HOME    (CODE)
+      000000                         97 __interrupt_vect:
+      000000 02 00 4C         [24]   98 	ljmp	__sdcc_gsinit_startup
+                                     99 ; restartable atomic support routines
+      000003                        100 	.ds	5
+      000008                        101 sdcc_atomic_exchange_rollback_start::
+      000008 00               [12]  102 	nop
+      000009 00               [12]  103 	nop
+      00000A                        104 sdcc_atomic_exchange_pdata_impl:
+      00000A E2               [24]  105 	movx	a, @r0
+      00000B FB               [12]  106 	mov	r3, a
+      00000C EA               [12]  107 	mov	a, r2
+      00000D F2               [24]  108 	movx	@r0, a
+      00000E 80 2C            [24]  109 	sjmp	sdcc_atomic_exchange_exit
+      000010 00               [12]  110 	nop
+      000011 00               [12]  111 	nop
+      000012                        112 sdcc_atomic_exchange_xdata_impl:
+      000012 E0               [24]  113 	movx	a, @dptr
+      000013 FB               [12]  114 	mov	r3, a
+      000014 EA               [12]  115 	mov	a, r2
+      000015 F0               [24]  116 	movx	@dptr, a
+      000016 80 24            [24]  117 	sjmp	sdcc_atomic_exchange_exit
+      000018                        118 sdcc_atomic_compare_exchange_idata_impl:
+      000018 E6               [12]  119 	mov	a, @r0
+      000019 B5 02 02         [24]  120 	cjne	a, ar2, .+#5
+      00001C EB               [12]  121 	mov	a, r3
+      00001D F6               [12]  122 	mov	@r0, a
+      00001E 22               [24]  123 	ret
+      00001F 00               [12]  124 	nop
+      000020                        125 sdcc_atomic_compare_exchange_pdata_impl:
+      000020 E2               [24]  126 	movx	a, @r0
+      000021 B5 02 02         [24]  127 	cjne	a, ar2, .+#5
+      000024 EB               [12]  128 	mov	a, r3
+      000025 F2               [24]  129 	movx	@r0, a
+      000026 22               [24]  130 	ret
+      000027 00               [12]  131 	nop
+      000028                        132 sdcc_atomic_compare_exchange_xdata_impl:
+      000028 E0               [24]  133 	movx	a, @dptr
+      000029 B5 02 02         [24]  134 	cjne	a, ar2, .+#5
+      00002C EB               [12]  135 	mov	a, r3
+      00002D F0               [24]  136 	movx	@dptr, a
+      00002E 22               [24]  137 	ret
+      00002F                        138 sdcc_atomic_exchange_rollback_end::
+                                    139 
+      00002F                        140 sdcc_atomic_exchange_gptr_impl::
+      00002F 30 F6 E0         [24]  141 	jnb	b.6, sdcc_atomic_exchange_xdata_impl
+      000032 A8 82            [24]  142 	mov	r0, dpl
+      000034 20 F5 D3         [24]  143 	jb	b.5, sdcc_atomic_exchange_pdata_impl
+      000037                        144 sdcc_atomic_exchange_idata_impl:
+      000037 EA               [12]  145 	mov	a, r2
+      000038 C6               [12]  146 	xch	a, @r0
+      000039 F5 82            [12]  147 	mov	dpl, a
+      00003B 22               [24]  148 	ret
+      00003C                        149 sdcc_atomic_exchange_exit:
+      00003C 8B 82            [24]  150 	mov	dpl, r3
+      00003E 22               [24]  151 	ret
+      00003F                        152 sdcc_atomic_compare_exchange_gptr_impl::
+      00003F 30 F6 E6         [24]  153 	jnb	b.6, sdcc_atomic_compare_exchange_xdata_impl
+      000042 A8 82            [24]  154 	mov	r0, dpl
+      000044 20 F5 D9         [24]  155 	jb	b.5, sdcc_atomic_compare_exchange_pdata_impl
+      000047 80 CF            [24]  156 	sjmp	sdcc_atomic_compare_exchange_idata_impl
+                                    157 ;--------------------------------------------------------
+                                    158 ; global & static initialisations
+                                    159 ;--------------------------------------------------------
+                                    160 	.area HOME    (CODE)
+                                    161 	.area GSINIT  (CODE)
+                                    162 	.area GSFINAL (CODE)
+                                    163 	.area GSINIT  (CODE)
+                                    164 	.globl __sdcc_gsinit_startup
+                                    165 	.globl __sdcc_program_startup
+                                    166 	.globl __start__stack
+                                    167 	.globl __mcs51_genXINIT
+                                    168 	.globl __mcs51_genXRAMCLEAR
+                                    169 	.globl __mcs51_genRAMCLEAR
+                                    170 	.area GSFINAL (CODE)
+      0000A5 02 00 49         [24]  171 	ljmp	__sdcc_program_startup
+                                    172 ;--------------------------------------------------------
+                                    173 ; Home
+                                    174 ;--------------------------------------------------------
+                                    175 	.area HOME    (CODE)
+                                    176 	.area HOME    (CODE)
+      000049                        177 __sdcc_program_startup:
+      000049 02 00 A8         [24]  178 	ljmp	_main
+                                    179 ;	return from main will return to caller
+                                    180 ;--------------------------------------------------------
+                                    181 ; code
+                                    182 ;--------------------------------------------------------
+                                    183 	.area CSEG    (CODE)
+                                    184 ;------------------------------------------------------------
+                                    185 ;Allocation info for local variables in function 'main'
+                                    186 ;------------------------------------------------------------
+                                    187 ;dip           Allocated to registers r7 
+                                    188 ;adc1          Allocated to registers r5 r6 
+                                    189 ;adc2          Allocated to registers 
+                                    190 ;------------------------------------------------------------
+                                    191 ;	src/main.c:13: void main(void)
+                                    192 ;	-----------------------------------------
+                                    193 ;	 function main
+                                    194 ;	-----------------------------------------
+      0000A8                        195 _main:
+                           000007   196 	ar7 = 0x07
+                           000006   197 	ar6 = 0x06
+                           000005   198 	ar5 = 0x05
+                           000004   199 	ar4 = 0x04
+                           000003   200 	ar3 = 0x03
+                           000002   201 	ar2 = 0x02
+                           000001   202 	ar1 = 0x01
+                           000000   203 	ar0 = 0x00
+                                    204 ;	src/main.c:15: namur_logic_init(&g_logic);
+      0000A8 90 00 21         [24]  205 	mov	dptr,#_g_logic
+      0000AB 75 F0 40         [24]  206 	mov	b, #0x40
+      0000AE 12 07 B0         [24]  207 	lcall	_namur_logic_init
+                                    208 ;	src/main.c:16: bsp_init();
+      0000B1 12 02 A7         [24]  209 	lcall	_bsp_init
+      0000B4                        210 00102$:
+                                    211 ;	src/main.c:19: uint8_t dip = bsp_read_dip();
+      0000B4 12 02 D8         [24]  212 	lcall	_bsp_read_dip
+      0000B7 AF 82            [24]  213 	mov	r7, dpl
+                                    214 ;	src/main.c:20: uint16_t adc1 = bsp_adc_read_channel(NAMUR_ADC_CH1);
+      0000B9 75 82 00         [24]  215 	mov	dpl, #0x00
+      0000BC C0 07            [24]  216 	push	ar7
+      0000BE 12 03 17         [24]  217 	lcall	_bsp_adc_read_channel
+      0000C1 AD 82            [24]  218 	mov	r5, dpl
+      0000C3 AE 83            [24]  219 	mov	r6, dph
+                                    220 ;	src/main.c:21: uint16_t adc2 = bsp_adc_read_channel(NAMUR_ADC_CH2);
+      0000C5 75 82 01         [24]  221 	mov	dpl, #0x01
+      0000C8 C0 06            [24]  222 	push	ar6
+      0000CA C0 05            [24]  223 	push	ar5
+      0000CC 12 03 17         [24]  224 	lcall	_bsp_adc_read_channel
+      0000CF 85 82 11         [24]  225 	mov	_namur_logic_update_PARM_3,dpl
+      0000D2 85 83 12         [24]  226 	mov	(_namur_logic_update_PARM_3 + 1),dph
+      0000D5 D0 05            [24]  227 	pop	ar5
+      0000D7 D0 06            [24]  228 	pop	ar6
+      0000D9 D0 07            [24]  229 	pop	ar7
+                                    230 ;	src/main.c:23: namur_logic_update(&g_logic, adc1, adc2, dip);
+      0000DB 8D 0F            [24]  231 	mov	_namur_logic_update_PARM_2,r5
+      0000DD 8E 10            [24]  232 	mov	(_namur_logic_update_PARM_2 + 1),r6
+      0000DF 8F 13            [24]  233 	mov	_namur_logic_update_PARM_4,r7
+      0000E1 90 00 21         [24]  234 	mov	dptr,#_g_logic
+      0000E4 75 F0 40         [24]  235 	mov	b, #0x40
+      0000E7 12 08 C5         [24]  236 	lcall	_namur_logic_update
+                                    237 ;	src/main.c:25: bsp_led_ch1_sense(g_logic.ch[0].sense_led);
+      0000EA 85 2B 82         [24]  238 	mov	dpl,(_g_logic + 0x000a)
+      0000ED 12 03 64         [24]  239 	lcall	_bsp_led_ch1_sense
+                                    240 ;	src/main.c:26: bsp_led_ch2_sense(g_logic.ch[1].sense_led);
+      0000F0 85 37 82         [24]  241 	mov	dpl,(_g_logic + 0x0016)
+      0000F3 12 03 70         [24]  242 	lcall	_bsp_led_ch2_sense
+                                    243 ;	src/main.c:27: bsp_led_ch1_fault(g_logic.ch[0].fault_led);
+      0000F6 85 2C 82         [24]  244 	mov	dpl,(_g_logic + 0x000b)
+      0000F9 12 03 7C         [24]  245 	lcall	_bsp_led_ch1_fault
+                                    246 ;	src/main.c:28: bsp_led_ch2_fault(g_logic.ch[1].fault_led);
+      0000FC 85 38 82         [24]  247 	mov	dpl,(_g_logic + 0x0017)
+      0000FF 12 03 88         [24]  248 	lcall	_bsp_led_ch2_fault
+                                    249 ;	src/main.c:30: bsp_clear_wdt();
+      000102 12 03 94         [24]  250 	lcall	_bsp_clear_wdt
+                                    251 ;	src/main.c:31: bsp_delay_ms(BSP_LOOP_MS);
+      000105 90 00 14         [24]  252 	mov	dptr,#0x0014
+      000108 12 02 B6         [24]  253 	lcall	_bsp_delay_ms
+                                    254 ;	src/main.c:33: }
+      00010B 80 A7            [24]  255 	sjmp	00102$
+                                    256 	.area CSEG    (CODE)
+                                    257 	.area CONST   (CODE)
+                                    258 	.area XINIT   (CODE)
+                                    259 	.area CABS    (ABS,CODE)

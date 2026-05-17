@@ -1,0 +1,777 @@
+                                      1 ;--------------------------------------------------------
+                                      2 ; File Created by SDCC : free open source ISO C Compiler
+                                      3 ; Version 4.5.0 #15242 (Mac OS X ppc)
+                                      4 ;--------------------------------------------------------
+                                      5 	.module ms51_bsp
+                                      6 	
+                                      7 	.optsdcc -mmcs51 --model-small
+                                      8 ;--------------------------------------------------------
+                                      9 ; Public variables in this module
+                                     10 ;--------------------------------------------------------
+                                     11 	.globl _AINDIDS
+                                     12 	.globl _ADCDH
+                                     13 	.globl _ADCDL
+                                     14 	.globl _ADCCON2
+                                     15 	.globl _ADCDLY
+                                     16 	.globl _ADCCON1
+                                     17 	.globl _ADCCON0
+                                     18 	.globl _P2M2
+                                     19 	.globl _P2M1
+                                     20 	.globl _P1M2
+                                     21 	.globl _P1M1
+                                     22 	.globl _P0M2
+                                     23 	.globl _P0M1
+                                     24 	.globl _WDCON
+                                     25 	.globl _BODCON0
+                                     26 	.globl _CLKCON
+                                     27 	.globl _P2
+                                     28 	.globl _P1
+                                     29 	.globl _P0
+                                     30 	.globl _bsp_init
+                                     31 	.globl _bsp_delay_ms
+                                     32 	.globl _bsp_read_dip
+                                     33 	.globl _bsp_adc_read_channel
+                                     34 	.globl _bsp_led_ch1_sense
+                                     35 	.globl _bsp_led_ch2_sense
+                                     36 	.globl _bsp_led_ch1_fault
+                                     37 	.globl _bsp_led_ch2_fault
+                                     38 	.globl _bsp_clear_wdt
+                                     39 	.globl _bsp_hardware_failure
+                                     40 ;--------------------------------------------------------
+                                     41 ; special function registers
+                                     42 ;--------------------------------------------------------
+                                     43 	.area RSEG    (ABS,DATA)
+      000000                         44 	.org 0x0000
+                           000080    45 _P0	=	0x0080
+                           000090    46 _P1	=	0x0090
+                           0000A0    47 _P2	=	0x00a0
+                           00008E    48 _CLKCON	=	0x008e
+                           000086    49 _BODCON0	=	0x0086
+                           0000AA    50 _WDCON	=	0x00aa
+                           0000B1    51 _P0M1	=	0x00b1
+                           0000B2    52 _P0M2	=	0x00b2
+                           0000B3    53 _P1M1	=	0x00b3
+                           0000B4    54 _P1M2	=	0x00b4
+                           0000B5    55 _P2M1	=	0x00b5
+                           0000B6    56 _P2M2	=	0x00b6
+                           0000E8    57 _ADCCON0	=	0x00e8
+                           0000E9    58 _ADCCON1	=	0x00e9
+                           0000EA    59 _ADCDLY	=	0x00ea
+                           0000EB    60 _ADCCON2	=	0x00eb
+                           0000EC    61 _ADCDL	=	0x00ec
+                           0000ED    62 _ADCDH	=	0x00ed
+                           0000CE    63 _AINDIDS	=	0x00ce
+                                     64 ;--------------------------------------------------------
+                                     65 ; special function bits
+                                     66 ;--------------------------------------------------------
+                                     67 	.area RSEG    (ABS,DATA)
+      000000                         68 	.org 0x0000
+                                     69 ;--------------------------------------------------------
+                                     70 ; overlayable register banks
+                                     71 ;--------------------------------------------------------
+                                     72 	.area REG_BANK_0	(REL,OVR,DATA)
+      000000                         73 	.ds 8
+                                     74 ;--------------------------------------------------------
+                                     75 ; internal ram data
+                                     76 ;--------------------------------------------------------
+                                     77 	.area DSEG    (DATA)
+                                     78 ;--------------------------------------------------------
+                                     79 ; overlayable items in internal ram
+                                     80 ;--------------------------------------------------------
+                                     81 	.area	OSEG    (OVR,DATA)
+      000000                         82 _gpio_set_mode_PARM_2:
+      000000                         83 	.ds 1
+      000001                         84 _gpio_set_mode_PARM_3:
+      000001                         85 	.ds 1
+                                     86 	.area	OSEG    (OVR,DATA)
+      000000                         87 _gpio_write_PARM_2:
+      000000                         88 	.ds 1
+      000001                         89 _gpio_write_PARM_3:
+      000001                         90 	.ds 1
+                                     91 	.area	OSEG    (OVR,DATA)
+      000000                         92 _gpio_read_PARM_2:
+      000000                         93 	.ds 1
+                                     94 	.area	OSEG    (OVR,DATA)
+                                     95 ;--------------------------------------------------------
+                                     96 ; indirectly addressable internal ram data
+                                     97 ;--------------------------------------------------------
+                                     98 	.area ISEG    (DATA)
+                                     99 ;--------------------------------------------------------
+                                    100 ; absolute internal ram data
+                                    101 ;--------------------------------------------------------
+                                    102 	.area IABS    (ABS,DATA)
+                                    103 	.area IABS    (ABS,DATA)
+                                    104 ;--------------------------------------------------------
+                                    105 ; bit data
+                                    106 ;--------------------------------------------------------
+                                    107 	.area BSEG    (BIT)
+                                    108 ;--------------------------------------------------------
+                                    109 ; paged external ram data
+                                    110 ;--------------------------------------------------------
+                                    111 	.area PSEG    (PAG,XDATA)
+                                    112 ;--------------------------------------------------------
+                                    113 ; uninitialized external ram data
+                                    114 ;--------------------------------------------------------
+                                    115 	.area XSEG    (XDATA)
+                                    116 ;--------------------------------------------------------
+                                    117 ; absolute external ram data
+                                    118 ;--------------------------------------------------------
+                                    119 	.area XABS    (ABS,XDATA)
+                                    120 ;--------------------------------------------------------
+                                    121 ; initialized external ram data
+                                    122 ;--------------------------------------------------------
+                                    123 	.area XISEG   (XDATA)
+                                    124 	.area HOME    (CODE)
+                                    125 	.area GSINIT0 (CODE)
+                                    126 	.area GSINIT1 (CODE)
+                                    127 	.area GSINIT2 (CODE)
+                                    128 	.area GSINIT3 (CODE)
+                                    129 	.area GSINIT4 (CODE)
+                                    130 	.area GSINIT5 (CODE)
+                                    131 	.area GSINIT  (CODE)
+                                    132 	.area GSFINAL (CODE)
+                                    133 	.area CSEG    (CODE)
+                                    134 ;--------------------------------------------------------
+                                    135 ; global & static initialisations
+                                    136 ;--------------------------------------------------------
+                                    137 	.area HOME    (CODE)
+                                    138 	.area GSINIT  (CODE)
+                                    139 	.area GSFINAL (CODE)
+                                    140 	.area GSINIT  (CODE)
+                                    141 ;--------------------------------------------------------
+                                    142 ; Home
+                                    143 ;--------------------------------------------------------
+                                    144 	.area HOME    (CODE)
+                                    145 	.area HOME    (CODE)
+                                    146 ;--------------------------------------------------------
+                                    147 ; code
+                                    148 ;--------------------------------------------------------
+                                    149 	.area CSEG    (CODE)
+                                    150 ;------------------------------------------------------------
+                                    151 ;Allocation info for local variables in function 'bsp_clock_init'
+                                    152 ;------------------------------------------------------------
+                                    153 ;	src/bsp/ms51_bsp.c:27: static void bsp_clock_init(void)
+                                    154 ;	-----------------------------------------
+                                    155 ;	 function bsp_clock_init
+                                    156 ;	-----------------------------------------
+      000000                        157 _bsp_clock_init:
+                           000007   158 	ar7 = 0x07
+                           000006   159 	ar6 = 0x06
+                           000005   160 	ar5 = 0x05
+                           000004   161 	ar4 = 0x04
+                           000003   162 	ar3 = 0x03
+                           000002   163 	ar2 = 0x02
+                           000001   164 	ar1 = 0x01
+                           000000   165 	ar0 = 0x00
+                                    166 ;	src/bsp/ms51_bsp.c:29: CLKCON = (CLKCON & (unsigned char)~0x70) | CLKCON_HIRC_16M;
+      000000 74 8F            [12]  167 	mov	a,#0x8f
+      000002 55 8E            [12]  168 	anl	a,_CLKCON
+      000004 44 30            [12]  169 	orl	a,#0x30
+      000006 F5 8E            [12]  170 	mov	_CLKCON,a
+                                    171 ;	src/bsp/ms51_bsp.c:30: }
+      000008 22               [24]  172 	ret
+                                    173 ;------------------------------------------------------------
+                                    174 ;Allocation info for local variables in function 'bsp_configure_bod'
+                                    175 ;------------------------------------------------------------
+                                    176 ;	src/bsp/ms51_bsp.c:32: static void bsp_configure_bod(void)
+                                    177 ;	-----------------------------------------
+                                    178 ;	 function bsp_configure_bod
+                                    179 ;	-----------------------------------------
+      000009                        180 _bsp_configure_bod:
+                                    181 ;	src/bsp/ms51_bsp.c:35: BODCON0 = (unsigned char)(BODCON0_BOVEN | BODCON0_BODRSTEN | 0x06);
+      000009 75 86 86         [24]  182 	mov	_BODCON0,#0x86
+                                    183 ;	src/bsp/ms51_bsp.c:36: (void)BSP_BOD_THRESHOLD_MV;
+                                    184 ;	src/bsp/ms51_bsp.c:37: }
+      00000C 22               [24]  185 	ret
+                                    186 ;------------------------------------------------------------
+                                    187 ;Allocation info for local variables in function 'bsp_configure_wdt'
+                                    188 ;------------------------------------------------------------
+                                    189 ;	src/bsp/ms51_bsp.c:39: static void bsp_configure_wdt(void)
+                                    190 ;	-----------------------------------------
+                                    191 ;	 function bsp_configure_wdt
+                                    192 ;	-----------------------------------------
+      00000D                        193 _bsp_configure_wdt:
+                                    194 ;	src/bsp/ms51_bsp.c:41: WDCON = (unsigned char)((WDCON & (unsigned char)~0x07) | WDCON_WDTEN | 0x05);
+      00000D 74 F8            [12]  195 	mov	a,#0xf8
+      00000F 55 AA            [12]  196 	anl	a,_WDCON
+      000011 44 05            [12]  197 	orl	a,#0x05
+      000013 F5 AA            [12]  198 	mov	_WDCON,a
+                                    199 ;	src/bsp/ms51_bsp.c:42: (void)BSP_WDT_TIMEOUT_MS;
+                                    200 ;	src/bsp/ms51_bsp.c:43: }
+      000015 22               [24]  201 	ret
+                                    202 ;------------------------------------------------------------
+                                    203 ;Allocation info for local variables in function 'gpio_set_mode'
+                                    204 ;------------------------------------------------------------
+                                    205 ;bit           Allocated with name '_gpio_set_mode_PARM_2'
+                                    206 ;is_output     Allocated with name '_gpio_set_mode_PARM_3'
+                                    207 ;port          Allocated to registers r7 
+                                    208 ;------------------------------------------------------------
+                                    209 ;	src/bsp/ms51_bsp.c:45: static void gpio_set_mode(uint8_t port, uint8_t bit, uint8_t is_output)
+                                    210 ;	-----------------------------------------
+                                    211 ;	 function gpio_set_mode
+                                    212 ;	-----------------------------------------
+      000016                        213 _gpio_set_mode:
+      000016 AF 82            [24]  214 	mov	r7, dpl
+                                    215 ;	src/bsp/ms51_bsp.c:47: if (port == 1U) {
+      000018 BF 01 30         [24]  216 	cjne	r7,#0x01,00110$
+                                    217 ;	src/bsp/ms51_bsp.c:48: if (is_output) {
+      00001B E5*01            [12]  218 	mov	a,_gpio_set_mode_PARM_3
+      00001D 60 16            [24]  219 	jz	00102$
+                                    220 ;	src/bsp/ms51_bsp.c:49: P1M1 &= (unsigned char)~(1U << bit);
+      00001F 85*00 F0         [24]  221 	mov	b,_gpio_set_mode_PARM_2
+      000022 05 F0            [12]  222 	inc	b
+      000024 74 01            [12]  223 	mov	a,#0x01
+      000026 80 02            [24]  224 	sjmp	00142$
+      000028                        225 00141$:
+      000028 25 E0            [12]  226 	add	a,acc
+      00002A                        227 00142$:
+      00002A D5 F0 FB         [24]  228 	djnz	b,00141$
+      00002D FE               [12]  229 	mov	r6,a
+      00002E F4               [12]  230 	cpl	a
+      00002F 52 B3            [12]  231 	anl	_P1M1,a
+                                    232 ;	src/bsp/ms51_bsp.c:50: P1M2 |= (unsigned char)(1U << bit);
+      000031 EE               [12]  233 	mov	a,r6
+      000032 42 B4            [12]  234 	orl	_P1M2,a
+      000034 22               [24]  235 	ret
+      000035                        236 00102$:
+                                    237 ;	src/bsp/ms51_bsp.c:52: P1M1 |= (unsigned char)(1U << bit);
+      000035 85*00 F0         [24]  238 	mov	b,_gpio_set_mode_PARM_2
+      000038 05 F0            [12]  239 	inc	b
+      00003A 74 01            [12]  240 	mov	a,#0x01
+      00003C 80 02            [24]  241 	sjmp	00144$
+      00003E                        242 00143$:
+      00003E 25 E0            [12]  243 	add	a,acc
+      000040                        244 00144$:
+      000040 D5 F0 FB         [24]  245 	djnz	b,00143$
+      000043 FE               [12]  246 	mov	r6,a
+      000044 42 B3            [12]  247 	orl	_P1M1,a
+                                    248 ;	src/bsp/ms51_bsp.c:53: P1M2 &= (unsigned char)~(1U << bit);
+      000046 EE               [12]  249 	mov	a,r6
+      000047 F4               [12]  250 	cpl	a
+      000048 52 B4            [12]  251 	anl	_P1M2,a
+      00004A 22               [24]  252 	ret
+      00004B                        253 00110$:
+                                    254 ;	src/bsp/ms51_bsp.c:55: } else if (port == 2U) {
+      00004B BF 02 2F         [24]  255 	cjne	r7,#0x02,00112$
+                                    256 ;	src/bsp/ms51_bsp.c:56: if (is_output) {
+      00004E E5*01            [12]  257 	mov	a,_gpio_set_mode_PARM_3
+      000050 60 16            [24]  258 	jz	00105$
+                                    259 ;	src/bsp/ms51_bsp.c:57: P2M1 &= (unsigned char)~(1U << bit);
+      000052 85*00 F0         [24]  260 	mov	b,_gpio_set_mode_PARM_2
+      000055 05 F0            [12]  261 	inc	b
+      000057 74 01            [12]  262 	mov	a,#0x01
+      000059 80 02            [24]  263 	sjmp	00149$
+      00005B                        264 00148$:
+      00005B 25 E0            [12]  265 	add	a,acc
+      00005D                        266 00149$:
+      00005D D5 F0 FB         [24]  267 	djnz	b,00148$
+      000060 FF               [12]  268 	mov	r7,a
+      000061 F4               [12]  269 	cpl	a
+      000062 52 B5            [12]  270 	anl	_P2M1,a
+                                    271 ;	src/bsp/ms51_bsp.c:58: P2M2 |= (unsigned char)(1U << bit);
+      000064 EF               [12]  272 	mov	a,r7
+      000065 42 B6            [12]  273 	orl	_P2M2,a
+      000067 22               [24]  274 	ret
+      000068                        275 00105$:
+                                    276 ;	src/bsp/ms51_bsp.c:60: P2M1 |= (unsigned char)(1U << bit);
+      000068 85*00 F0         [24]  277 	mov	b,_gpio_set_mode_PARM_2
+      00006B 05 F0            [12]  278 	inc	b
+      00006D 74 01            [12]  279 	mov	a,#0x01
+      00006F 80 02            [24]  280 	sjmp	00151$
+      000071                        281 00150$:
+      000071 25 E0            [12]  282 	add	a,acc
+      000073                        283 00151$:
+      000073 D5 F0 FB         [24]  284 	djnz	b,00150$
+      000076 FF               [12]  285 	mov	r7,a
+      000077 42 B5            [12]  286 	orl	_P2M1,a
+                                    287 ;	src/bsp/ms51_bsp.c:61: P2M2 &= (unsigned char)~(1U << bit);
+      000079 EF               [12]  288 	mov	a,r7
+      00007A F4               [12]  289 	cpl	a
+      00007B 52 B6            [12]  290 	anl	_P2M2,a
+      00007D                        291 00112$:
+                                    292 ;	src/bsp/ms51_bsp.c:64: }
+      00007D 22               [24]  293 	ret
+                                    294 ;------------------------------------------------------------
+                                    295 ;Allocation info for local variables in function 'gpio_write'
+                                    296 ;------------------------------------------------------------
+                                    297 ;bit           Allocated with name '_gpio_write_PARM_2'
+                                    298 ;on            Allocated with name '_gpio_write_PARM_3'
+                                    299 ;port          Allocated to registers r7 
+                                    300 ;------------------------------------------------------------
+                                    301 ;	src/bsp/ms51_bsp.c:66: static void gpio_write(uint8_t port, uint8_t bit, uint8_t on)
+                                    302 ;	-----------------------------------------
+                                    303 ;	 function gpio_write
+                                    304 ;	-----------------------------------------
+      00007E                        305 _gpio_write:
+      00007E AF 82            [24]  306 	mov	r7, dpl
+                                    307 ;	src/bsp/ms51_bsp.c:68: if (port == 1U) {
+      000080 BF 01 27         [24]  308 	cjne	r7,#0x01,00110$
+                                    309 ;	src/bsp/ms51_bsp.c:69: if (on) {
+      000083 E5*01            [12]  310 	mov	a,_gpio_write_PARM_3
+      000085 60 11            [24]  311 	jz	00102$
+                                    312 ;	src/bsp/ms51_bsp.c:70: P1 |= (unsigned char)(1U << bit);
+      000087 85*00 F0         [24]  313 	mov	b,_gpio_write_PARM_2
+      00008A 05 F0            [12]  314 	inc	b
+      00008C 74 01            [12]  315 	mov	a,#0x01
+      00008E 80 02            [24]  316 	sjmp	00142$
+      000090                        317 00141$:
+      000090 25 E0            [12]  318 	add	a,acc
+      000092                        319 00142$:
+      000092 D5 F0 FB         [24]  320 	djnz	b,00141$
+      000095 42 90            [12]  321 	orl	_P1,a
+      000097 22               [24]  322 	ret
+      000098                        323 00102$:
+                                    324 ;	src/bsp/ms51_bsp.c:72: P1 &= (unsigned char)~(1U << bit);
+      000098 85*00 F0         [24]  325 	mov	b,_gpio_write_PARM_2
+      00009B 05 F0            [12]  326 	inc	b
+      00009D 74 01            [12]  327 	mov	a,#0x01
+      00009F 80 02            [24]  328 	sjmp	00144$
+      0000A1                        329 00143$:
+      0000A1 25 E0            [12]  330 	add	a,acc
+      0000A3                        331 00144$:
+      0000A3 D5 F0 FB         [24]  332 	djnz	b,00143$
+      0000A6 F4               [12]  333 	cpl	a
+      0000A7 52 90            [12]  334 	anl	_P1,a
+      0000A9 22               [24]  335 	ret
+      0000AA                        336 00110$:
+                                    337 ;	src/bsp/ms51_bsp.c:74: } else if (port == 2U) {
+      0000AA BF 02 26         [24]  338 	cjne	r7,#0x02,00112$
+                                    339 ;	src/bsp/ms51_bsp.c:75: if (on) {
+      0000AD E5*01            [12]  340 	mov	a,_gpio_write_PARM_3
+      0000AF 60 11            [24]  341 	jz	00105$
+                                    342 ;	src/bsp/ms51_bsp.c:76: P2 |= (unsigned char)(1U << bit);
+      0000B1 85*00 F0         [24]  343 	mov	b,_gpio_write_PARM_2
+      0000B4 05 F0            [12]  344 	inc	b
+      0000B6 74 01            [12]  345 	mov	a,#0x01
+      0000B8 80 02            [24]  346 	sjmp	00149$
+      0000BA                        347 00148$:
+      0000BA 25 E0            [12]  348 	add	a,acc
+      0000BC                        349 00149$:
+      0000BC D5 F0 FB         [24]  350 	djnz	b,00148$
+      0000BF 42 A0            [12]  351 	orl	_P2,a
+      0000C1 22               [24]  352 	ret
+      0000C2                        353 00105$:
+                                    354 ;	src/bsp/ms51_bsp.c:78: P2 &= (unsigned char)~(1U << bit);
+      0000C2 85*00 F0         [24]  355 	mov	b,_gpio_write_PARM_2
+      0000C5 05 F0            [12]  356 	inc	b
+      0000C7 74 01            [12]  357 	mov	a,#0x01
+      0000C9 80 02            [24]  358 	sjmp	00151$
+      0000CB                        359 00150$:
+      0000CB 25 E0            [12]  360 	add	a,acc
+      0000CD                        361 00151$:
+      0000CD D5 F0 FB         [24]  362 	djnz	b,00150$
+      0000D0 F4               [12]  363 	cpl	a
+      0000D1 52 A0            [12]  364 	anl	_P2,a
+      0000D3                        365 00112$:
+                                    366 ;	src/bsp/ms51_bsp.c:81: }
+      0000D3 22               [24]  367 	ret
+                                    368 ;------------------------------------------------------------
+                                    369 ;Allocation info for local variables in function 'gpio_read'
+                                    370 ;------------------------------------------------------------
+                                    371 ;bit           Allocated with name '_gpio_read_PARM_2'
+                                    372 ;port          Allocated to registers r7 
+                                    373 ;------------------------------------------------------------
+                                    374 ;	src/bsp/ms51_bsp.c:83: static uint8_t gpio_read(uint8_t port, uint8_t bit)
+                                    375 ;	-----------------------------------------
+                                    376 ;	 function gpio_read
+                                    377 ;	-----------------------------------------
+      0000D4                        378 _gpio_read:
+      0000D4 AF 82            [24]  379 	mov	r7, dpl
+                                    380 ;	src/bsp/ms51_bsp.c:85: if (port == 1U) {
+      0000D6 BF 01 13         [24]  381 	cjne	r7,#0x01,00102$
+                                    382 ;	src/bsp/ms51_bsp.c:86: return (P1 >> bit) & 1U;
+      0000D9 85*00 F0         [24]  383 	mov	b,_gpio_read_PARM_2
+      0000DC 05 F0            [12]  384 	inc	b
+      0000DE E5 90            [12]  385 	mov	a,_P1
+      0000E0 80 02            [24]  386 	sjmp	00122$
+      0000E2                        387 00121$:
+      0000E2 C3               [12]  388 	clr	c
+      0000E3 13               [12]  389 	rrc	a
+      0000E4                        390 00122$:
+      0000E4 D5 F0 FB         [24]  391 	djnz	b,00121$
+      0000E7 54 01            [12]  392 	anl	a,#0x01
+      0000E9 F5 82            [12]  393 	mov	dpl,a
+      0000EB 22               [24]  394 	ret
+      0000EC                        395 00102$:
+                                    396 ;	src/bsp/ms51_bsp.c:88: if (port == 2U) {
+      0000EC BF 02 13         [24]  397 	cjne	r7,#0x02,00104$
+                                    398 ;	src/bsp/ms51_bsp.c:89: return (P2 >> bit) & 1U;
+      0000EF 85*00 F0         [24]  399 	mov	b,_gpio_read_PARM_2
+      0000F2 05 F0            [12]  400 	inc	b
+      0000F4 E5 A0            [12]  401 	mov	a,_P2
+      0000F6 80 02            [24]  402 	sjmp	00126$
+      0000F8                        403 00125$:
+      0000F8 C3               [12]  404 	clr	c
+      0000F9 13               [12]  405 	rrc	a
+      0000FA                        406 00126$:
+      0000FA D5 F0 FB         [24]  407 	djnz	b,00125$
+      0000FD 54 01            [12]  408 	anl	a,#0x01
+      0000FF F5 82            [12]  409 	mov	dpl,a
+      000101 22               [24]  410 	ret
+      000102                        411 00104$:
+                                    412 ;	src/bsp/ms51_bsp.c:91: return 0U;
+      000102 75 82 00         [24]  413 	mov	dpl, #0x00
+                                    414 ;	src/bsp/ms51_bsp.c:92: }
+      000105 22               [24]  415 	ret
+                                    416 ;------------------------------------------------------------
+                                    417 ;Allocation info for local variables in function 'bsp_gpio_init'
+                                    418 ;------------------------------------------------------------
+                                    419 ;	src/bsp/ms51_bsp.c:94: static void bsp_gpio_init(void)
+                                    420 ;	-----------------------------------------
+                                    421 ;	 function bsp_gpio_init
+                                    422 ;	-----------------------------------------
+      000106                        423 _bsp_gpio_init:
+                                    424 ;	src/bsp/ms51_bsp.c:96: gpio_set_mode(NAMUR_DIP_CH1_PORT, NAMUR_DIP_CH1_BIT, 0U);
+      000106 75*00 00         [24]  425 	mov	_gpio_set_mode_PARM_2,#0x00
+      000109 75*01 00         [24]  426 	mov	_gpio_set_mode_PARM_3,#0x00
+      00010C 75 82 01         [24]  427 	mov	dpl, #0x01
+      00010F 12r00r16         [24]  428 	lcall	_gpio_set_mode
+                                    429 ;	src/bsp/ms51_bsp.c:97: gpio_set_mode(NAMUR_DIP_CH2_PORT, NAMUR_DIP_CH2_BIT, 0U);
+      000112 75*00 01         [24]  430 	mov	_gpio_set_mode_PARM_2,#0x01
+      000115 75*01 00         [24]  431 	mov	_gpio_set_mode_PARM_3,#0x00
+      000118 75 82 01         [24]  432 	mov	dpl, #0x01
+      00011B 12r00r16         [24]  433 	lcall	_gpio_set_mode
+                                    434 ;	src/bsp/ms51_bsp.c:98: gpio_set_mode(NAMUR_DIP_FAULT_SUPPRESS_PORT, NAMUR_DIP_FAULT_SUPPRESS_BIT, 0U);
+      00011E 75*00 02         [24]  435 	mov	_gpio_set_mode_PARM_2,#0x02
+      000121 75*01 00         [24]  436 	mov	_gpio_set_mode_PARM_3,#0x00
+      000124 75 82 01         [24]  437 	mov	dpl, #0x01
+      000127 12r00r16         [24]  438 	lcall	_gpio_set_mode
+                                    439 ;	src/bsp/ms51_bsp.c:100: gpio_set_mode(NAMUR_LED_CH1_SENSE_PORT, NAMUR_LED_CH1_SENSE_BIT, 1U);
+      00012A 75*00 00         [24]  440 	mov	_gpio_set_mode_PARM_2,#0x00
+      00012D 75*01 01         [24]  441 	mov	_gpio_set_mode_PARM_3,#0x01
+      000130 75 82 02         [24]  442 	mov	dpl, #0x02
+      000133 12r00r16         [24]  443 	lcall	_gpio_set_mode
+                                    444 ;	src/bsp/ms51_bsp.c:101: gpio_set_mode(NAMUR_LED_CH2_SENSE_PORT, NAMUR_LED_CH2_SENSE_BIT, 1U);
+      000136 75*00 01         [24]  445 	mov	_gpio_set_mode_PARM_2,#0x01
+      000139 75*01 01         [24]  446 	mov	_gpio_set_mode_PARM_3,#0x01
+      00013C 75 82 02         [24]  447 	mov	dpl, #0x02
+      00013F 12r00r16         [24]  448 	lcall	_gpio_set_mode
+                                    449 ;	src/bsp/ms51_bsp.c:102: gpio_set_mode(NAMUR_LED_CH1_FAULT_PORT, NAMUR_LED_CH1_FAULT_BIT, 1U);
+      000142 75*00 02         [24]  450 	mov	_gpio_set_mode_PARM_2,#0x02
+      000145 75*01 01         [24]  451 	mov	_gpio_set_mode_PARM_3,#0x01
+      000148 75 82 02         [24]  452 	mov	dpl, #0x02
+      00014B 12r00r16         [24]  453 	lcall	_gpio_set_mode
+                                    454 ;	src/bsp/ms51_bsp.c:103: gpio_set_mode(NAMUR_LED_CH2_FAULT_PORT, NAMUR_LED_CH2_FAULT_BIT, 1U);
+      00014E 75*00 03         [24]  455 	mov	_gpio_set_mode_PARM_2,#0x03
+      000151 75*01 01         [24]  456 	mov	_gpio_set_mode_PARM_3,#0x01
+      000154 75 82 02         [24]  457 	mov	dpl, #0x02
+      000157 12r00r16         [24]  458 	lcall	_gpio_set_mode
+                                    459 ;	src/bsp/ms51_bsp.c:105: gpio_write(NAMUR_LED_CH1_SENSE_PORT, NAMUR_LED_CH1_SENSE_BIT, 0U);
+      00015A 75*00 00         [24]  460 	mov	_gpio_write_PARM_2,#0x00
+      00015D 75*01 00         [24]  461 	mov	_gpio_write_PARM_3,#0x00
+      000160 75 82 02         [24]  462 	mov	dpl, #0x02
+      000163 12r00r7E         [24]  463 	lcall	_gpio_write
+                                    464 ;	src/bsp/ms51_bsp.c:106: gpio_write(NAMUR_LED_CH2_SENSE_PORT, NAMUR_LED_CH2_SENSE_BIT, 0U);
+      000166 75*00 01         [24]  465 	mov	_gpio_write_PARM_2,#0x01
+      000169 75*01 00         [24]  466 	mov	_gpio_write_PARM_3,#0x00
+      00016C 75 82 02         [24]  467 	mov	dpl, #0x02
+      00016F 12r00r7E         [24]  468 	lcall	_gpio_write
+                                    469 ;	src/bsp/ms51_bsp.c:107: gpio_write(NAMUR_LED_CH1_FAULT_PORT, NAMUR_LED_CH1_FAULT_BIT, 0U);
+      000172 75*00 02         [24]  470 	mov	_gpio_write_PARM_2,#0x02
+      000175 75*01 00         [24]  471 	mov	_gpio_write_PARM_3,#0x00
+      000178 75 82 02         [24]  472 	mov	dpl, #0x02
+      00017B 12r00r7E         [24]  473 	lcall	_gpio_write
+                                    474 ;	src/bsp/ms51_bsp.c:108: gpio_write(NAMUR_LED_CH2_FAULT_PORT, NAMUR_LED_CH2_FAULT_BIT, 0U);
+      00017E 75*00 03         [24]  475 	mov	_gpio_write_PARM_2,#0x03
+      000181 75*01 00         [24]  476 	mov	_gpio_write_PARM_3,#0x00
+      000184 75 82 02         [24]  477 	mov	dpl, #0x02
+                                    478 ;	src/bsp/ms51_bsp.c:109: }
+      000187 02r00r7E         [24]  479 	ljmp	_gpio_write
+                                    480 ;------------------------------------------------------------
+                                    481 ;Allocation info for local variables in function 'bsp_adc_init'
+                                    482 ;------------------------------------------------------------
+                                    483 ;	src/bsp/ms51_bsp.c:111: static void bsp_adc_init(void)
+                                    484 ;	-----------------------------------------
+                                    485 ;	 function bsp_adc_init
+                                    486 ;	-----------------------------------------
+      00018A                        487 _bsp_adc_init:
+                                    488 ;	src/bsp/ms51_bsp.c:113: ADCCON1 = 0x00;
+      00018A 75 E9 00         [24]  489 	mov	_ADCCON1,#0x00
+                                    490 ;	src/bsp/ms51_bsp.c:114: ADCCON2 = 0x00;
+      00018D 75 EB 00         [24]  491 	mov	_ADCCON2,#0x00
+                                    492 ;	src/bsp/ms51_bsp.c:115: ADCDLY = 0x0A;
+      000190 75 EA 0A         [24]  493 	mov	_ADCDLY,#0x0a
+                                    494 ;	src/bsp/ms51_bsp.c:116: ADCCON0 = 0x01;
+      000193 75 E8 01         [24]  495 	mov	_ADCCON0,#0x01
+                                    496 ;	src/bsp/ms51_bsp.c:117: AINDIDS = 0x03;
+      000196 75 CE 03         [24]  497 	mov	_AINDIDS,#0x03
+                                    498 ;	src/bsp/ms51_bsp.c:118: }
+      000199 22               [24]  499 	ret
+                                    500 ;------------------------------------------------------------
+                                    501 ;Allocation info for local variables in function 'bsp_init'
+                                    502 ;------------------------------------------------------------
+                                    503 ;	src/bsp/ms51_bsp.c:120: void bsp_init(void)
+                                    504 ;	-----------------------------------------
+                                    505 ;	 function bsp_init
+                                    506 ;	-----------------------------------------
+      00019A                        507 _bsp_init:
+                                    508 ;	src/bsp/ms51_bsp.c:122: bsp_clock_init();
+      00019A 12r00r00         [24]  509 	lcall	_bsp_clock_init
+                                    510 ;	src/bsp/ms51_bsp.c:123: bsp_gpio_init();
+      00019D 12r01r06         [24]  511 	lcall	_bsp_gpio_init
+                                    512 ;	src/bsp/ms51_bsp.c:124: bsp_configure_bod();
+      0001A0 12r00r09         [24]  513 	lcall	_bsp_configure_bod
+                                    514 ;	src/bsp/ms51_bsp.c:125: bsp_configure_wdt();
+      0001A3 12r00r0D         [24]  515 	lcall	_bsp_configure_wdt
+                                    516 ;	src/bsp/ms51_bsp.c:126: bsp_adc_init();
+                                    517 ;	src/bsp/ms51_bsp.c:127: }
+      0001A6 02r01r8A         [24]  518 	ljmp	_bsp_adc_init
+                                    519 ;------------------------------------------------------------
+                                    520 ;Allocation info for local variables in function 'bsp_delay_ms'
+                                    521 ;------------------------------------------------------------
+                                    522 ;ms            Allocated to registers 
+                                    523 ;i             Allocated to registers r4 r5 
+                                    524 ;------------------------------------------------------------
+                                    525 ;	src/bsp/ms51_bsp.c:129: void bsp_delay_ms(uint16_t ms)
+                                    526 ;	-----------------------------------------
+                                    527 ;	 function bsp_delay_ms
+                                    528 ;	-----------------------------------------
+      0001A9                        529 _bsp_delay_ms:
+      0001A9 AE 82            [24]  530 	mov	r6, dpl
+      0001AB AF 83            [24]  531 	mov	r7, dph
+                                    532 ;	src/bsp/ms51_bsp.c:132: while (ms--) {
+      0001AD                        533 00102$:
+      0001AD 8E 04            [24]  534 	mov	ar4,r6
+      0001AF 8F 05            [24]  535 	mov	ar5,r7
+      0001B1 1E               [12]  536 	dec	r6
+      0001B2 BE FF 01         [24]  537 	cjne	r6,#0xff,00136$
+      0001B5 1F               [12]  538 	dec	r7
+      0001B6                        539 00136$:
+      0001B6 EC               [12]  540 	mov	a,r4
+      0001B7 4D               [12]  541 	orl	a,r5
+      0001B8 60 10            [24]  542 	jz	00108$
+                                    543 ;	src/bsp/ms51_bsp.c:134: for (i = 0; i < 1600U; i++) {
+      0001BA 7C 40            [12]  544 	mov	r4,#0x40
+      0001BC 7D 06            [12]  545 	mov	r5,#0x06
+      0001BE                        546 00107$:
+                                    547 ;	src/bsp/ms51_bsp.c:135: __asm__("nop");
+      0001BE 00               [12]  548 	nop
+      0001BF 1C               [12]  549 	dec	r4
+      0001C0 BC FF 01         [24]  550 	cjne	r4,#0xff,00138$
+      0001C3 1D               [12]  551 	dec	r5
+      0001C4                        552 00138$:
+                                    553 ;	src/bsp/ms51_bsp.c:134: for (i = 0; i < 1600U; i++) {
+      0001C4 EC               [12]  554 	mov	a,r4
+      0001C5 4D               [12]  555 	orl	a,r5
+      0001C6 70 F6            [24]  556 	jnz	00107$
+      0001C8 80 E3            [24]  557 	sjmp	00102$
+      0001CA                        558 00108$:
+                                    559 ;	src/bsp/ms51_bsp.c:138: }
+      0001CA 22               [24]  560 	ret
+                                    561 ;------------------------------------------------------------
+                                    562 ;Allocation info for local variables in function 'bsp_read_dip'
+                                    563 ;------------------------------------------------------------
+                                    564 ;dip           Allocated to registers r7 
+                                    565 ;------------------------------------------------------------
+                                    566 ;	src/bsp/ms51_bsp.c:140: uint8_t bsp_read_dip(void)
+                                    567 ;	-----------------------------------------
+                                    568 ;	 function bsp_read_dip
+                                    569 ;	-----------------------------------------
+      0001CB                        570 _bsp_read_dip:
+                                    571 ;	src/bsp/ms51_bsp.c:142: uint8_t dip = 0U;
+      0001CB 7F 00            [12]  572 	mov	r7,#0x00
+                                    573 ;	src/bsp/ms51_bsp.c:144: if (gpio_read(NAMUR_DIP_CH1_PORT, NAMUR_DIP_CH1_BIT) == 0U) {
+      0001CD 8F*00            [24]  574 	mov	_gpio_read_PARM_2,r7
+      0001CF 75 82 01         [24]  575 	mov	dpl, #0x01
+      0001D2 C0 07            [24]  576 	push	ar7
+      0001D4 12r00rD4         [24]  577 	lcall	_gpio_read
+      0001D7 E5 82            [12]  578 	mov	a, dpl
+      0001D9 D0 07            [24]  579 	pop	ar7
+      0001DB 70 02            [24]  580 	jnz	00102$
+                                    581 ;	src/bsp/ms51_bsp.c:145: dip |= NAMUR_DIP_CH1_NC;
+      0001DD 7F 01            [12]  582 	mov	r7,#0x01
+      0001DF                        583 00102$:
+                                    584 ;	src/bsp/ms51_bsp.c:147: if (gpio_read(NAMUR_DIP_CH2_PORT, NAMUR_DIP_CH2_BIT) == 0U) {
+      0001DF 75*00 01         [24]  585 	mov	_gpio_read_PARM_2,#0x01
+      0001E2 75 82 01         [24]  586 	mov	dpl, #0x01
+      0001E5 C0 07            [24]  587 	push	ar7
+      0001E7 12r00rD4         [24]  588 	lcall	_gpio_read
+      0001EA E5 82            [12]  589 	mov	a, dpl
+      0001EC D0 07            [24]  590 	pop	ar7
+      0001EE 70 03            [24]  591 	jnz	00104$
+                                    592 ;	src/bsp/ms51_bsp.c:148: dip |= NAMUR_DIP_CH2_NC;
+      0001F0 43 07 02         [24]  593 	orl	ar7,#0x02
+      0001F3                        594 00104$:
+                                    595 ;	src/bsp/ms51_bsp.c:150: if (gpio_read(NAMUR_DIP_FAULT_SUPPRESS_PORT, NAMUR_DIP_FAULT_SUPPRESS_BIT) == 0U) {
+      0001F3 75*00 02         [24]  596 	mov	_gpio_read_PARM_2,#0x02
+      0001F6 75 82 01         [24]  597 	mov	dpl, #0x01
+      0001F9 C0 07            [24]  598 	push	ar7
+      0001FB 12r00rD4         [24]  599 	lcall	_gpio_read
+      0001FE E5 82            [12]  600 	mov	a, dpl
+      000200 D0 07            [24]  601 	pop	ar7
+      000202 70 03            [24]  602 	jnz	00106$
+                                    603 ;	src/bsp/ms51_bsp.c:151: dip |= NAMUR_DIP_FAULT_SUPPRESS;
+      000204 43 07 04         [24]  604 	orl	ar7,#0x04
+      000207                        605 00106$:
+                                    606 ;	src/bsp/ms51_bsp.c:153: return dip;
+      000207 8F 82            [24]  607 	mov	dpl, r7
+                                    608 ;	src/bsp/ms51_bsp.c:154: }
+      000209 22               [24]  609 	ret
+                                    610 ;------------------------------------------------------------
+                                    611 ;Allocation info for local variables in function 'bsp_adc_read_channel'
+                                    612 ;------------------------------------------------------------
+                                    613 ;channel       Allocated to registers r7 
+                                    614 ;timeout       Allocated to registers r6 r7 
+                                    615 ;value         Allocated to registers 
+                                    616 ;------------------------------------------------------------
+                                    617 ;	src/bsp/ms51_bsp.c:156: uint16_t bsp_adc_read_channel(uint8_t channel)
+                                    618 ;	-----------------------------------------
+                                    619 ;	 function bsp_adc_read_channel
+                                    620 ;	-----------------------------------------
+      00020A                        621 _bsp_adc_read_channel:
+      00020A AF 82            [24]  622 	mov	r7, dpl
+                                    623 ;	src/bsp/ms51_bsp.c:161: ADCCON0 = (unsigned char)((ADCCON0 & 0xF0) | (channel & 0x0FU) | ADCCON0_ADCTRG);
+      00020C E5 E8            [12]  624 	mov	a,_ADCCON0
+      00020E 54 F0            [12]  625 	anl	a,#0xf0
+      000210 FE               [12]  626 	mov	r6,a
+      000211 74 0F            [12]  627 	mov	a,#0x0f
+      000213 5F               [12]  628 	anl	a,r7
+      000214 4E               [12]  629 	orl	a,r6
+      000215 44 04            [12]  630 	orl	a,#0x04
+      000217 F5 E8            [12]  631 	mov	_ADCCON0,a
+                                    632 ;	src/bsp/ms51_bsp.c:162: while (((ADCCON0 & ADCCON0_ADCF) == 0U) && (timeout > 0U)) {
+      000219 7E D0            [12]  633 	mov	r6,#0xd0
+      00021B 7F 07            [12]  634 	mov	r7,#0x07
+      00021D                        635 00102$:
+      00021D E5 E8            [12]  636 	mov	a,_ADCCON0
+      00021F 20 E5 0B         [24]  637 	jb	acc.5,00104$
+      000222 EE               [12]  638 	mov	a,r6
+      000223 4F               [12]  639 	orl	a,r7
+      000224 60 07            [24]  640 	jz	00104$
+                                    641 ;	src/bsp/ms51_bsp.c:163: timeout--;
+      000226 1E               [12]  642 	dec	r6
+      000227 BE FF 01         [24]  643 	cjne	r6,#0xff,00136$
+      00022A 1F               [12]  644 	dec	r7
+      00022B                        645 00136$:
+      00022B 80 F0            [24]  646 	sjmp	00102$
+      00022D                        647 00104$:
+                                    648 ;	src/bsp/ms51_bsp.c:165: if (timeout == 0U) {
+      00022D EE               [12]  649 	mov	a,r6
+      00022E 4F               [12]  650 	orl	a,r7
+      00022F 70 07            [24]  651 	jnz	00106$
+                                    652 ;	src/bsp/ms51_bsp.c:166: bsp_hardware_failure();
+      000231 12r02r8B         [24]  653 	lcall	_bsp_hardware_failure
+                                    654 ;	src/bsp/ms51_bsp.c:167: return 0U;
+      000234 90 00 00         [24]  655 	mov	dptr,#0x0000
+      000237 22               [24]  656 	ret
+      000238                        657 00106$:
+                                    658 ;	src/bsp/ms51_bsp.c:170: value = (uint16_t)(((uint16_t)ADCDH << 4) | ((uint16_t)ADCDL & 0x0FU));
+      000238 AE ED            [24]  659 	mov	r6,_ADCDH
+      00023A E4               [12]  660 	clr	a
+      00023B CE               [12]  661 	xch	a,r6
+      00023C C4               [12]  662 	swap	a
+      00023D CE               [12]  663 	xch	a,r6
+      00023E 6E               [12]  664 	xrl	a,r6
+      00023F CE               [12]  665 	xch	a,r6
+      000240 54 F0            [12]  666 	anl	a,#0xf0
+      000242 CE               [12]  667 	xch	a,r6
+      000243 6E               [12]  668 	xrl	a,r6
+      000244 FF               [12]  669 	mov	r7,a
+      000245 AC EC            [24]  670 	mov	r4,_ADCDL
+      000247 53 04 0F         [24]  671 	anl	ar4,#0x0f
+      00024A 7D 00            [12]  672 	mov	r5,#0x00
+      00024C EE               [12]  673 	mov	a,r6
+      00024D 42 04            [12]  674 	orl	ar4,a
+      00024F EF               [12]  675 	mov	a,r7
+      000250 42 05            [12]  676 	orl	ar5,a
+      000252 8C 82            [24]  677 	mov	dpl,r4
+      000254 8D 83            [24]  678 	mov	dph,r5
+                                    679 ;	src/bsp/ms51_bsp.c:171: return value;
+                                    680 ;	src/bsp/ms51_bsp.c:172: }
+      000256 22               [24]  681 	ret
+                                    682 ;------------------------------------------------------------
+                                    683 ;Allocation info for local variables in function 'bsp_led_ch1_sense'
+                                    684 ;------------------------------------------------------------
+                                    685 ;on            Allocated to registers 
+                                    686 ;------------------------------------------------------------
+                                    687 ;	src/bsp/ms51_bsp.c:174: void bsp_led_ch1_sense(uint8_t on) { gpio_write(NAMUR_LED_CH1_SENSE_PORT, NAMUR_LED_CH1_SENSE_BIT, on); }
+                                    688 ;	-----------------------------------------
+                                    689 ;	 function bsp_led_ch1_sense
+                                    690 ;	-----------------------------------------
+      000257                        691 _bsp_led_ch1_sense:
+      000257 85 82*01         [24]  692 	mov	_gpio_write_PARM_3,dpl
+      00025A 75*00 00         [24]  693 	mov	_gpio_write_PARM_2,#0x00
+      00025D 75 82 02         [24]  694 	mov	dpl, #0x02
+      000260 02r00r7E         [24]  695 	ljmp	_gpio_write
+                                    696 ;------------------------------------------------------------
+                                    697 ;Allocation info for local variables in function 'bsp_led_ch2_sense'
+                                    698 ;------------------------------------------------------------
+                                    699 ;on            Allocated to registers 
+                                    700 ;------------------------------------------------------------
+                                    701 ;	src/bsp/ms51_bsp.c:175: void bsp_led_ch2_sense(uint8_t on) { gpio_write(NAMUR_LED_CH2_SENSE_PORT, NAMUR_LED_CH2_SENSE_BIT, on); }
+                                    702 ;	-----------------------------------------
+                                    703 ;	 function bsp_led_ch2_sense
+                                    704 ;	-----------------------------------------
+      000263                        705 _bsp_led_ch2_sense:
+      000263 85 82*01         [24]  706 	mov	_gpio_write_PARM_3,dpl
+      000266 75*00 01         [24]  707 	mov	_gpio_write_PARM_2,#0x01
+      000269 75 82 02         [24]  708 	mov	dpl, #0x02
+      00026C 02r00r7E         [24]  709 	ljmp	_gpio_write
+                                    710 ;------------------------------------------------------------
+                                    711 ;Allocation info for local variables in function 'bsp_led_ch1_fault'
+                                    712 ;------------------------------------------------------------
+                                    713 ;on            Allocated to registers 
+                                    714 ;------------------------------------------------------------
+                                    715 ;	src/bsp/ms51_bsp.c:176: void bsp_led_ch1_fault(uint8_t on) { gpio_write(NAMUR_LED_CH1_FAULT_PORT, NAMUR_LED_CH1_FAULT_BIT, on); }
+                                    716 ;	-----------------------------------------
+                                    717 ;	 function bsp_led_ch1_fault
+                                    718 ;	-----------------------------------------
+      00026F                        719 _bsp_led_ch1_fault:
+      00026F 85 82*01         [24]  720 	mov	_gpio_write_PARM_3,dpl
+      000272 75*00 02         [24]  721 	mov	_gpio_write_PARM_2,#0x02
+      000275 75 82 02         [24]  722 	mov	dpl, #0x02
+      000278 02r00r7E         [24]  723 	ljmp	_gpio_write
+                                    724 ;------------------------------------------------------------
+                                    725 ;Allocation info for local variables in function 'bsp_led_ch2_fault'
+                                    726 ;------------------------------------------------------------
+                                    727 ;on            Allocated to registers 
+                                    728 ;------------------------------------------------------------
+                                    729 ;	src/bsp/ms51_bsp.c:177: void bsp_led_ch2_fault(uint8_t on) { gpio_write(NAMUR_LED_CH2_FAULT_PORT, NAMUR_LED_CH2_FAULT_BIT, on); }
+                                    730 ;	-----------------------------------------
+                                    731 ;	 function bsp_led_ch2_fault
+                                    732 ;	-----------------------------------------
+      00027B                        733 _bsp_led_ch2_fault:
+      00027B 85 82*01         [24]  734 	mov	_gpio_write_PARM_3,dpl
+      00027E 75*00 03         [24]  735 	mov	_gpio_write_PARM_2,#0x03
+      000281 75 82 02         [24]  736 	mov	dpl, #0x02
+      000284 02r00r7E         [24]  737 	ljmp	_gpio_write
+                                    738 ;------------------------------------------------------------
+                                    739 ;Allocation info for local variables in function 'bsp_clear_wdt'
+                                    740 ;------------------------------------------------------------
+                                    741 ;	src/bsp/ms51_bsp.c:179: void bsp_clear_wdt(void)
+                                    742 ;	-----------------------------------------
+                                    743 ;	 function bsp_clear_wdt
+                                    744 ;	-----------------------------------------
+      000287                        745 _bsp_clear_wdt:
+                                    746 ;	src/bsp/ms51_bsp.c:181: WDCON |= WDCON_WDCLR;
+      000287 43 AA 80         [24]  747 	orl	_WDCON,#0x80
+                                    748 ;	src/bsp/ms51_bsp.c:182: }
+      00028A 22               [24]  749 	ret
+                                    750 ;------------------------------------------------------------
+                                    751 ;Allocation info for local variables in function 'bsp_hardware_failure'
+                                    752 ;------------------------------------------------------------
+                                    753 ;	src/bsp/ms51_bsp.c:184: void bsp_hardware_failure(void)
+                                    754 ;	-----------------------------------------
+                                    755 ;	 function bsp_hardware_failure
+                                    756 ;	-----------------------------------------
+      00028B                        757 _bsp_hardware_failure:
+                                    758 ;	src/bsp/ms51_bsp.c:186: bsp_led_ch1_sense(0U);
+      00028B 75 82 00         [24]  759 	mov	dpl, #0x00
+      00028E 12r02r57         [24]  760 	lcall	_bsp_led_ch1_sense
+                                    761 ;	src/bsp/ms51_bsp.c:187: bsp_led_ch2_sense(0U);
+      000291 75 82 00         [24]  762 	mov	dpl, #0x00
+      000294 12r02r63         [24]  763 	lcall	_bsp_led_ch2_sense
+                                    764 ;	src/bsp/ms51_bsp.c:188: bsp_led_ch1_fault(0U);
+      000297 75 82 00         [24]  765 	mov	dpl, #0x00
+      00029A 12r02r6F         [24]  766 	lcall	_bsp_led_ch1_fault
+                                    767 ;	src/bsp/ms51_bsp.c:189: bsp_led_ch2_fault(0U);
+      00029D 75 82 00         [24]  768 	mov	dpl, #0x00
+      0002A0 12r02r7B         [24]  769 	lcall	_bsp_led_ch2_fault
+                                    770 ;	src/bsp/ms51_bsp.c:190: while (1) {
+      0002A3                        771 00102$:
+                                    772 ;	src/bsp/ms51_bsp.c:193: }
+      0002A3 80 FE            [24]  773 	sjmp	00102$
+                                    774 	.area CSEG    (CODE)
+                                    775 	.area CONST   (CODE)
+                                    776 	.area XINIT   (CODE)
+                                    777 	.area CABS    (ABS,CODE)
