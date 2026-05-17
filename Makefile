@@ -23,12 +23,15 @@ build:
 	mkdir -p build
 
 build/main.rel: src/main.c
+	@mkdir -p build
 	$(SDCC) $(SDCCFLAGS) $(INCLUDES) -c $< -o $@
 
 build/ms51_bsp.rel: src/bsp/ms51_bsp.c
+	@mkdir -p build
 	$(SDCC) $(SDCCFLAGS) $(INCLUDES) -c $< -o $@
 
 build/namur_logic.rel: src/app/namur_logic.c
+	@mkdir -p build
 	$(SDCC) $(SDCCFLAGS) $(INCLUDES) -c $< -o $@
 
 firmware: $(FW_IHX)
@@ -46,9 +49,11 @@ test: build $(TEST_BIN) $(CHECK_BIN)
 	@echo "Host tests OK"
 
 $(TEST_BIN): tests/test_namur_logic.c src/app/namur_logic.c
+	@mkdir -p build
 	$(CC) -Wall -Wextra -std=c99 $(INCLUDES) -o $@ tests/test_namur_logic.c src/app/namur_logic.c
 
 $(CHECK_BIN): tests/check_namur_thresholds.c
+	@mkdir -p build
 	$(CC) -Wall -Wextra -std=c99 -I include -o $@ tests/check_namur_thresholds.c
 
 check: $(CHECK_BIN)
