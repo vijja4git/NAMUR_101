@@ -2,8 +2,8 @@
  * @file test_namur_logic.c
  * @brief Host unit tests for namur_logic (GCC).
  *
- * Simulated ADC counts (200 ohm, field AT-pin windows):
- *   lead < 24 | target ON < 196 | hold 196..458 | idle ~550 | short > 1146
+ * ADC windows (200 ohm, inverted loop, filtered counts):
+ *   < 24 lead | < 196 latch ON | 196–458 hold | > 458 latch OFF | > 1146 short
  */
 
 #include <stdio.h>
@@ -14,12 +14,12 @@
 #include "bsp_config.h"
 #include "namur_config.h"
 
-/* Mock loop ADC levels — match namur_thresholds.h field calibration */
-#define ADC_LEAD_BREAK      10U   /* 0 V / open */
-#define ADC_TARGET_PRESENT  120U  /* ~0.3–1 mA, latch ON */
-#define ADC_HYST_MID        300U  /* hold band */
-#define ADC_IDLE            550U  /* ~3.36 mA @ 0.67 V */
-#define ADC_SHORT           1200U /* ~8 mA short */
+#define ADC_LEAD_BREAK      10U   /* < 24  — open wire */
+#define ADC_TARGET_PRESENT  120U  /* < 196 — target detected */
+#define ADC_HYST_MID        300U  /* 196–458 hold */
+#define ADC_IDLE            550U  /* > 458 — sensor idle */
+#define ADC_SHORT           1200U /* > 1146 — short */
+#define ADC_NORMAL_MID      350U  /* normal band, no fault */
 
 static int g_failures;
 
@@ -64,10 +64,10 @@ static void test_hysteresis_hold(void)
 
     namur_logic_init(&ctx);
     settle(&ctx, ADC_TARGET_PRESENT, ADC_IDLE, 0U, 30U);
-    expect_true(ctx.ch[0].latched_on == 1U, "latch ON when current drops (adc < ON)");
+    expect_true(ctx.ch[0].latched_on == 1U, "latch ON when adc < 196");
 
     settle(&ctx, ADC_HYST_MID, ADC_IDLE, 0U, 10U);
-    expect_true(ctx.ch[0].latched_on == 1U, "latch holds ON inside hysteresis band");
+    expect_true(ctx.ch[0].latched_on == 1U, "latch holds ON inside 196–458 band");
 }
 
 static void test_hysteresis_off(void)
@@ -77,7 +77,7 @@ static void test_hysteresis_off(void)
     namur_logic_init(&ctx);
     settle(&ctx, ADC_TARGET_PRESENT, ADC_IDLE, 0U, 30U);
     settle(&ctx, ADC_IDLE, ADC_IDLE, 0U, 30U);
-    expect_true(ctx.ch[0].latched_on == 0U, "latch OFF when current recovers (adc > OFF)");
+    expect_true(ctx.ch[0].latched_on == 0U, "latch OFF when adc > 458");
 }
 
 static void test_debounce_glitch(void)
@@ -111,6 +111,17 @@ static void test_lead_break_and_short(void)
     expect_true(ctx.ch[1].fault == NAMUR_FAULT_SHORT_CIRCUIT, "short circuit fault");
 }
 
+static void test_normal_operation_leds(void)
+{
+    namur_logic_t ctx;
+
+    namur_logic_init(&ctx);
+    settle(&ctx, ADC_TARGET_PRESENT, ADC_IDLE, 0U, 30U);
+    expect_true(ctx.ch[0].fault == NAMUR_FAULT_NONE, "no fault in normal band");
+    expect_true(ctx.ch[0].fault_led == 0U, "fault LED off when normal");
+    expect_true(ctx.ch[0].sense_led == 1U, "sense LED follows latch ON (NO)");
+}
+
 static void test_dip_nc_invert(void)
 {
     namur_logic_t ctx;
@@ -124,16 +135,32 @@ static void test_dip_nc_invert(void)
     expect_true(ctx.ch[0].sense_led == 0U, "NC mode inverts sense LED");
 }
 
-static void test_dip_fault_suppress(void)
+static void test_dip_fault_suppress_short_only(void)
 {
     namur_logic_t ctx;
+    unsigned i;
+    uint8_t saw_lead_fault_led = 0U;
 
     namur_logic_init(&ctx);
     settle(&ctx, ADC_LEAD_BREAK, ADC_SHORT, NAMUR_DIP_FAULT_SUPPRESS, 30U);
-    expect_true(ctx.ch[0].fault == NAMUR_FAULT_NONE, "DIP3 clears CH1 fault");
-    expect_true(ctx.ch[1].fault == NAMUR_FAULT_NONE, "DIP3 clears CH2 fault");
-    expect_true(ctx.ch[0].fault_led == 0U, "fault LED off when suppressed");
-    expect_true(ctx.ch[1].fault_led == 0U, "fault LED off when suppressed");
+
+    expect_true(ctx.ch[0].fault == NAMUR_FAULT_LEAD_BREAK,
+        "lead break not suppressed by DIP3");
+    expect_true(ctx.ch[0].sense_led == 0U,
+        "sense LED off during lead break with DIP3");
+
+    for (i = 0; i < (BSP_BLINK_LEAD_BREAK_HALF_TICKS * 2U); i++) {
+        namur_logic_update(&ctx, ADC_LEAD_BREAK, ADC_SHORT, NAMUR_DIP_FAULT_SUPPRESS);
+        if (ctx.ch[0].fault_led) {
+            saw_lead_fault_led = 1U;
+        }
+    }
+    expect_true(saw_lead_fault_led, "lead break fault LED blinks with DIP3");
+
+    expect_true(ctx.ch[1].fault == NAMUR_FAULT_NONE,
+        "short suppressed by DIP3");
+    expect_true(ctx.ch[1].fault_led == 0U,
+        "short fault LED off when suppressed");
 }
 
 static void test_blink_periods(void)
@@ -153,7 +180,7 @@ static void test_blink_periods(void)
         namur_logic_update(&ctx, ADC_LEAD_BREAK, ADC_IDLE, 0U);
     }
     lead_b = ctx.ch[0].fault_led;
-    expect_true(lead_a != lead_b, "lead break blink toggles after 1 Hz half period");
+    expect_true(lead_a != lead_b, "lead break 1 Hz blink toggles");
 
     namur_logic_init(&ctx);
     settle(&ctx, ADC_IDLE, ADC_SHORT, 0U, 60U);
@@ -163,7 +190,7 @@ static void test_blink_periods(void)
         namur_logic_update(&ctx, ADC_IDLE, ADC_SHORT, 0U);
     }
     short_b = ctx.ch[1].fault_led;
-    expect_true(short_a != short_b, "short blink toggles after 5 Hz half period");
+    expect_true(short_a != short_b, "short 5 Hz blink toggles");
 }
 
 static void test_sense_off_during_fault(void)
@@ -176,6 +203,19 @@ static void test_sense_off_during_fault(void)
     expect_true(ctx.ch[0].sense_led == 0U, "sense LED off when fault active");
 }
 
+static void test_fault_reactivates_after_normal(void)
+{
+    namur_logic_t ctx;
+
+    namur_logic_init(&ctx);
+    settle(&ctx, ADC_IDLE, ADC_IDLE, 0U, 30U);
+    expect_true(ctx.ch[0].fault_led == 0U, "fault LED off when idle normal");
+
+    settle(&ctx, ADC_LEAD_BREAK, ADC_IDLE, 0U, 30U);
+    expect_true(ctx.ch[0].fault == NAMUR_FAULT_LEAD_BREAK, "wire break reactivates fault");
+    expect_true(ctx.ch[0].sense_led == 0U, "sense LED off on wire break");
+}
+
 int main(void)
 {
     g_failures = 0;
@@ -185,10 +225,12 @@ int main(void)
     test_hysteresis_off();
     test_debounce_glitch();
     test_lead_break_and_short();
+    test_normal_operation_leds();
     test_dip_nc_invert();
-    test_dip_fault_suppress();
+    test_dip_fault_suppress_short_only();
     test_blink_periods();
     test_sense_off_during_fault();
+    test_fault_reactivates_after_normal();
 
     if (g_failures != 0) {
         fprintf(stderr, "%d test(s) failed.\n", g_failures);

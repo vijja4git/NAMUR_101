@@ -1,6 +1,13 @@
 /**
  * @file namur_logic.c
- * @brief EMA filter, debounced classification, hysteresis, DIP policy, fault blink.
+ * @brief EMA filter, debounced classification, hysteresis, fail-safe LED policy.
+ *
+ * Inverted 200-ohm loop (filtered ADC counts, 5 V ref):
+ *   < 24    lead break (0.15 mA) — fault 1 Hz, never suppressible
+ *   < 196   latch ON (1.20 mA)   — target detected
+ *   196–458 hysteresis hold
+ *   > 458   latch OFF (2.80 mA)  — sensor idle
+ *   > 1146  short (7.00 mA)     — fault 5 Hz, suppressible via DIP3
  */
 
 #include "namur_logic.h"
@@ -44,15 +51,34 @@ static void debounce_channel(namur_channel_t *ch)
     }
 }
 
-static void apply_fault(namur_channel_t *ch)
+static namur_fault_t fault_from_stable(namur_instant_class_t stable)
 {
-    if (ch->stable == NAMUR_INSTANT_LEAD_BREAK) {
-        ch->fault = NAMUR_FAULT_LEAD_BREAK;
-    } else if (ch->stable == NAMUR_INSTANT_SHORT) {
-        ch->fault = NAMUR_FAULT_SHORT_CIRCUIT;
-    } else {
-        ch->fault = NAMUR_FAULT_NONE;
+    if (stable == NAMUR_INSTANT_LEAD_BREAK) {
+        return NAMUR_FAULT_LEAD_BREAK;
     }
+    if (stable == NAMUR_INSTANT_SHORT) {
+        return NAMUR_FAULT_SHORT_CIRCUIT;
+    }
+    return NAMUR_FAULT_NONE;
+}
+
+/**
+ * Lead break is never cleared by fault-suppress DIP.
+ * Short circuit is cleared when fault_suppress is active.
+ */
+static void resolve_fault(namur_channel_t *ch, uint8_t fault_suppress)
+{
+    namur_fault_t detected = fault_from_stable(ch->stable);
+
+    if (detected == NAMUR_FAULT_LEAD_BREAK) {
+        ch->fault = NAMUR_FAULT_LEAD_BREAK;
+        return;
+    }
+    if (detected == NAMUR_FAULT_SHORT_CIRCUIT && !fault_suppress) {
+        ch->fault = NAMUR_FAULT_SHORT_CIRCUIT;
+        return;
+    }
+    ch->fault = NAMUR_FAULT_NONE;
 }
 
 static void apply_latch(namur_channel_t *ch)
@@ -93,29 +119,28 @@ static uint8_t fault_blink_on(const namur_channel_t *ch)
     return (uint8_t)(((ch->blink_tick / half) & 1U) == 0U);
 }
 
+static void drive_outputs(namur_channel_t *ch, uint8_t dip_nc)
+{
+    if (ch->fault != NAMUR_FAULT_NONE) {
+        ch->sense_led = 0U;
+        ch->blink_tick++;
+        ch->fault_led = fault_blink_on(ch);
+        return;
+    }
+
+    ch->fault_led = 0U;
+    ch->blink_tick = 0U;
+    ch->sense_led = sense_from_latch(ch->latched_on, dip_nc);
+}
+
 static void update_channel(namur_channel_t *ch, uint16_t raw_adc, uint8_t dip_nc, uint8_t fault_suppress)
 {
     ema_filter(raw_adc, &ch->filtered_adc);
     ch->instant = classify_adc(ch->filtered_adc);
     debounce_channel(ch);
-
-    if (fault_suppress) {
-        ch->fault = NAMUR_FAULT_NONE;
-    } else {
-        apply_fault(ch);
-    }
-
+    resolve_fault(ch, fault_suppress);
     apply_latch(ch);
-
-    if (ch->fault != NAMUR_FAULT_NONE) {
-        ch->sense_led = 0U;
-        ch->blink_tick++;
-        ch->fault_led = fault_blink_on(ch);
-    } else {
-        ch->fault_led = 0U;
-        ch->blink_tick = 0U;
-        ch->sense_led = sense_from_latch(ch->latched_on, dip_nc);
-    }
+    drive_outputs(ch, dip_nc);
 }
 
 void namur_logic_init(namur_logic_t *ctx)
